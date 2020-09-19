@@ -209,3 +209,17 @@ func(db Persistence) closeBreakPeriod(breakId uuid.UUID) error {
     log.Info(fmt.Sprintf("successfully updated work period %s", breakId))
     return nil
 }
+
+func(db Persistence) getActivePeriod(uid string) (ActiveWorkPeriod, error) {
+    log.Debug(fmt.Sprintf("retrieving active work period for user %s", uid))
+
+    var (periodId uuid.UUID; createdAt time.Time)
+    period := db.conn.QueryRow(context.Background(), "SELECT period_id, created_at FROM work_periods WHERE uid=$1 AND finished_at IS NULL ORDER BY created_at DESC LIMIT 1", uid)
+    err := period.Scan(&periodId, &createdAt)
+    if err != nil {
+        log.Error(fmt.Errorf("unable to retrieve active user period for user %s", uid))
+        return ActiveWorkPeriod{}, err
+    }
+    active := time.Now().Sub(createdAt)
+    return ActiveWorkPeriod{PeriodId: periodId, CreatedAt: createdAt, ActiveSince: active.Hours()}, nil
+}

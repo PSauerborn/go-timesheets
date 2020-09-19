@@ -4,6 +4,7 @@ import (
     "fmt"
     "github.com/gin-gonic/gin"
     "github.com/google/uuid"
+    "github.com/jackc/pgx/v4"
     log "github.com/sirupsen/logrus"
 )
 
@@ -19,7 +20,7 @@ func main() {
     router := gin.New()
 
     router.GET("/go-timesheets/health", healthCheckHandler)
-
+    router.GET("/go-timesheets/active", getActivePeriodHandler)
     router.GET("/go-timesheets/data", getUserDataHandler)
     router.GET("/go-timesheets/data/:start/:end", getUserTimeRangeDataHandler)
 
@@ -43,6 +44,23 @@ func getUser(ctx *gin.Context) string {
 func healthCheckHandler(ctx *gin.Context) {
     log.Debug("received request for health check route")
     StandardHTTP.Success(ctx)
+}
+
+func getActivePeriodHandler(ctx *gin.Context) {
+    user := getUser(ctx)
+    log.Debug(fmt.Sprintf("received request to get active peroid for user %s", user))
+    period, err := persistence.getActivePeriod(user)
+    if err != nil {
+        switch err {
+        case pgx.ErrNoRows:
+            StandardHTTP.NotFound(ctx)
+            return
+        default:
+            StandardHTTP.InternalServerError(ctx)
+            return
+        }
+    }
+    ctx.JSON(200, gin.H{"success": true, "http_code": 200, "payload": period})
 }
 
 func getUserDataHandler(ctx *gin.Context) {
