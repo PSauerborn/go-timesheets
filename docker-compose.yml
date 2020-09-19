@@ -1,0 +1,18 @@
+
+version: '3.7'
+services:
+
+  go-timesheets-api:
+    build: ./
+    container_name: go-timesheets-api
+    networks:
+    - core
+    - postgres
+    env_file:
+    - .env
+
+networks:
+  core:
+    name: core
+  postgres:
+    name: postgres
