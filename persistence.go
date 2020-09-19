@@ -87,6 +87,41 @@ func(db Persistence) getUserData(uid string) (UserData, error) {
     return UserData{Uid: uid, WorkPeriods: periods}, nil
 }
 
+func(db Persistence) getUserDataOverRange(uid string, start, end time.Time) (UserData, error) {
+    log.Debug(fmt.Sprintf("fetching data for user %s", uid))
+
+    rows, err := db.conn.Query(context.Background(), "SELECT period_id FROM work_periods WHERE uid=$1 AND created_at > $2 AND created_at < $3", uid, start, end)
+    if err != nil {
+        log.Error(fmt.Errorf("unable to retrieve work periods for user %s: %v", uid, err))
+        switch err {
+        case pgx.ErrNoRows:
+            return UserData{ Uid: uid, WorkPeriods: []WorkPeriod{}}, nil
+        default:
+            return UserData{}, err
+        }
+    }
+
+    periods := []WorkPeriod{}
+    // iterate over period ID's and retrieve full period
+    for rows.Next() {
+        var periodId uuid.UUID
+        err := rows.Scan(&periodId)
+        if err != nil {
+            log.Error(fmt.Errorf("unable to process work period: %v", err))
+            continue
+        }
+
+        // retrieve period and all breaks from database
+        period, err := db.getWorkPeriod(periodId)
+        if err != nil {
+            log.Error(fmt.Errorf("unable to retrieve work period %s", periodId))
+        } else {
+            periods = append(periods, period)
+        }
+    }
+    return UserData{Uid: uid, WorkPeriods: periods}, nil
+}
+
 
 func(db Persistence) getBreakPeriod(breakId uuid.UUID) (BreakPeriod, error) {
     log.Debug(fmt.Sprintf("retrieving break period %s", breakId))

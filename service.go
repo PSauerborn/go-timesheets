@@ -19,7 +19,12 @@ func main() {
     router := gin.New()
 
     router.GET("/go-timesheets/health", healthCheckHandler)
+
     router.GET("/go-timesheets/data", getUserDataHandler)
+    router.GET("/go-timesheets/data/:start/:end", getUserTimeRangeDataHandler)
+
+    router.GET("/go-timesheets/analyse", getUserAnalysisHandler)
+    router.GET("/go-timesheets/analyse/:start/:end", getUserTimeRangeAnalysisHandler)
 
     router.POST("/go-timesheets/work_period", createWorkPeriodHandler)
     router.POST("/go-timesheets/break_period/:periodId", createBreakPeriodHandler)
@@ -51,6 +56,57 @@ func getUserDataHandler(ctx *gin.Context) {
         return
     }
     ctx.JSON(200, gin.H{"success": true, "http_code": 200, "data": data})
+}
+
+func getUserTimeRangeDataHandler(ctx *gin.Context) {
+    user := getUser(ctx)
+    start, end, err := parseTimestamps(ctx.Param("start"), ctx.Param("end"))
+    if err != nil {
+        log.Error(fmt.Errorf("unable to parse timestamps: %v", err))
+        StandardHTTP.InvalidRequest(ctx)
+        return
+    }
+
+    log.Debug(fmt.Sprintf("received request to get user data for user %s", user))
+    // get user data from postgres database
+    data, err := persistence.getUserDataOverRange(user, start, end)
+    if err != nil {
+        log.Error(fmt.Errorf("unable to retrieve data for user %s: %v", user, err))
+        StandardHTTP.InternalServerError(ctx)
+        return
+    }
+    ctx.JSON(200, gin.H{"success": true, "http_code": 200, "data": data})
+}
+
+func getUserAnalysisHandler(ctx *gin.Context) {
+    user := getUser(ctx)
+    log.Debug(fmt.Sprintf("received analysis request for user %s", user))
+    results, err := analyzeUserTasks(user)
+    if err != nil {
+        log.Error(fmt.Errorf("unable to analyse user tasks: %v", err))
+        StandardHTTP.InternalServerError(ctx)
+        return
+    }
+    ctx.JSON(200, gin.H{"success": true, "http_code": 200, "payload": results})
+}
+
+func getUserTimeRangeAnalysisHandler(ctx *gin.Context) {
+    user := getUser(ctx)
+    start, end, err := parseTimestamps(ctx.Param("start"), ctx.Param("end"))
+    if err != nil {
+        log.Error(fmt.Errorf("unable to parse timestamps: %v", err))
+        StandardHTTP.InvalidRequest(ctx)
+        return
+    }
+
+    log.Debug(fmt.Sprintf("received time range analysis request for user %s", user))
+    results, err := analyseRangedUserTasks(user, start, end)
+    if err != nil {
+        log.Error(fmt.Errorf("unable to analyse user tasks: %v", err))
+        StandardHTTP.InternalServerError(ctx)
+        return
+    }
+    ctx.JSON(200, gin.H{"success": true, "http_code": 200, "payload": results})
 }
 
 func createWorkPeriodHandler(ctx *gin.Context) {
