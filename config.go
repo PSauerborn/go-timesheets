@@ -25,7 +25,7 @@ func ConfigureService() {
     }
     // configure listen address and port from environment variables
     ListenAddress = OverrideStringVariable("LISTEN_ADDRESS", "0.0.0.0")
-    ListenPort = OverrideIntegerVariable("LISTEN_PORT", 10071)
+    ListenPort = OverrideIntegerVariable("LISTEN_PORT", 10091)
 
     PostgresConnection = OverrideStringVariable("POSTGRES_CONNECTION", "postgres://postgres:postgres@192.168.99.100:5432/go_timesheets")
 }

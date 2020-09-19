@@ -18,10 +18,10 @@ FROM alpine:latest as server
 
 WORKDIR /app/server
 
-COPY --from=build /app/server/service ./
+COPY --from=build /app/server/go-timesheets ./
 
-RUN chmod +x ./service
+RUN chmod +x ./go-timesheets
 
-EXPOSE 10000
+EXPOSE 10091
 
-CMD [ "./service" ]
+CMD [ "./go-timesheets" ]
