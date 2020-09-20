@@ -64,3 +64,24 @@ func parseTimestamps(start, end string) (time.Time, time.Time, error) {
     }
     return startTime, endTime, nil
 }
+
+
+func aggregatePeriods(periods []WorkPeriod, date time.Time) []WorkPeriod {
+    aggregate := []WorkPeriod{}
+    for _, period := range(periods) {
+        if (period.CreatedAt.After(date) && period.CreatedAt.Before(date.Add(time.Hour * 24))) {
+            aggregate = append(aggregate, period)
+        }
+    }
+    return aggregate
+}
+
+func groupPeriodsByDay(periods []WorkPeriod, start, end time.Time) map[string][]WorkPeriod {
+    aggregatedPeriods := map[string][]WorkPeriod{}
+    date := start
+    for date.Before(end) {
+        aggregatedPeriods[date.Format("2006-01-02")] = aggregatePeriods(periods, date)
+        date = date.Add(time.Hour * 24)
+    }
+    return aggregatedPeriods
+}

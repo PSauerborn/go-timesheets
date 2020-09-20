@@ -2,6 +2,8 @@ package main
 
 import (
     "fmt"
+    "time"
+    "strings"
     "github.com/gin-gonic/gin"
     "github.com/google/uuid"
     "github.com/jackc/pgx/v4"
@@ -87,13 +89,20 @@ func getUserTimeRangeDataHandler(ctx *gin.Context) {
 
     log.Debug(fmt.Sprintf("received request to get user data for user %s", user))
     // get user data from postgres database
-    data, err := persistence.getUserDataOverRange(user, start, end)
+    data, err := persistence.getUserDataOverRange(user, start, end.Add(time.Hour * 24))
     if err != nil {
         log.Error(fmt.Errorf("unable to retrieve data for user %s: %v", user, err))
         StandardHTTP.InternalServerError(ctx)
         return
     }
-    ctx.JSON(200, gin.H{"success": true, "http_code": 200, "data": data})
+    // group values by day if specified in query parameters
+    groupValues := ctx.DefaultQuery("group", "false")
+    if strings.ToLower(groupValues) == "true" {
+        log.Debug(fmt.Sprintf("grouping periods by day"))
+        ctx.JSON(200, gin.H{"success": true, "http_code": 200, "data": groupPeriodsByDay(data.WorkPeriods, start, end.Add(time.Hour * 24))})
+    } else {
+        ctx.JSON(200, gin.H{"success": true, "http_code": 200, "data": data.WorkPeriods})
+    }
 }
 
 func getUserAnalysisHandler(ctx *gin.Context) {

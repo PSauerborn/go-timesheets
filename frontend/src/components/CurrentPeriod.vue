@@ -62,7 +62,7 @@ export default {
     methods: {
         increaseCounter: function() {
             let vm = this;
-            setTimeout(() => {
+            this.timer = setInterval(() => {
                 if (vm.counters.seconds == 59) {
                     if (vm.counters.minutes == 59) {
                         vm.counters.hours += 1
@@ -74,7 +74,6 @@ export default {
                 } else {
                     vm.counters.seconds += 1
                 }
-                vm.increaseCounter()
             }, 1000)
         },
         setTimeCounters: function() {
@@ -113,6 +112,10 @@ export default {
                 // asign payload to variable
                 vm.activePeriod = response.data.payload
                 vm.setTimeCounters()
+                if (vm.timer != null) {
+                    clearInterval(vm.timer)
+                }
+                vm.increaseCounter()
             }).catch(function (error) {
                 console.log("error fetching active work period: API return status code " + error.response.status)
                 if (error.response.status === 401) {
@@ -124,7 +127,7 @@ export default {
                         type: 'warn',
                         text: 'no active work period found'
                     })
-                    // vm.activePeriod = null
+                    vm.activePeriod = null
                 } else {
                     vm.$notify({
                         group: 'main',
@@ -155,6 +158,11 @@ export default {
                 })
                 // asign payload to variable
                 vm.activePeriod = response.data.payload
+                vm.setTimeCounters()
+                if (vm.timer != null) {
+                    clearInterval(vm.timer)
+                }
+                vm.increaseCounter()
             }).catch(function (error) {
                 console.log("error fetching active work period: API return status code " + error.response.status)
                 if (error.response.status === 401) {
@@ -202,13 +210,12 @@ export default {
         }
     },
     data: () => ({
-        activePeriod: {periodId: "361e6c2c-dabd-464e-8f20-293f32797dd0", createdAt: "2020-09-20T06:43:56"},
-        counters: {seconds: 0, minutes: 0, hours: 0}
+        activePeriod: null,
+        counters: {seconds: 0, minutes: 0, hours: 0},
+        timer: null
     }),
     mounted() {
         this.getActivePeriod()
-        this.setTimeCounters()
-        this.increaseCounter()
     }
 }
 </script>
