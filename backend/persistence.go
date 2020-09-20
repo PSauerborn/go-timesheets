@@ -56,7 +56,7 @@ func(db Persistence) createBreakPeriod(periodId uuid.UUID) (uuid.UUID, error) {
 func(db Persistence) getUserData(uid string) (UserData, error) {
     log.Debug(fmt.Sprintf("fetching data for user %s", uid))
 
-    rows, err := db.conn.Query(context.Background(), "SELECT period_id FROM work_periods WHERE uid=$1", uid)
+    rows, err := db.conn.Query(context.Background(), "SELECT period_id FROM work_periods WHERE uid=$1 AND finished_at IS NOT NULL", uid)
     if err != nil {
         log.Error(fmt.Errorf("unable to retrieve work periods for user %s: %v", uid, err))
         switch err {
@@ -91,7 +91,7 @@ func(db Persistence) getUserData(uid string) (UserData, error) {
 func(db Persistence) getUserDataOverRange(uid string, start, end time.Time) (UserData, error) {
     log.Debug(fmt.Sprintf("fetching data for user %s", uid))
 
-    rows, err := db.conn.Query(context.Background(), "SELECT period_id FROM work_periods WHERE uid=$1 AND created_at > $2 AND created_at < $3", uid, start, end)
+    rows, err := db.conn.Query(context.Background(), "SELECT period_id FROM work_periods WHERE uid=$1 AND created_at > $2 AND created_at < $3 AND finished_at IS NOT NULL", uid, start, end)
     if err != nil {
         log.Error(fmt.Errorf("unable to retrieve work periods for user %s: %v", uid, err))
         switch err {

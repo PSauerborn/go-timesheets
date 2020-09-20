@@ -1,8 +1,8 @@
 <template>
     <v-row align="center" justify="center" class="application-tab-container">
         <v-row align="center" justify="center">
-            <v-col cols=4>
-                <DayCard v-for="(day, index) in periods" :key="index" />
+            <v-col cols=8 align="center" justify="center">
+                <DayCard v-for="(day, index) in sortedPeriods" :key="index" :payload="day" />
             </v-col>
         </v-row>
     </v-row>
@@ -22,16 +22,29 @@ export default {
     },
     computed: {
         startDate: function() {
-            return moment(this.start).format('YYYY-MM-DD')
+            const timestamp = moment()
+            return timestamp.subtract('days', 7).format('YYYY-MM-DD')
         },
         endDate: function() {
-            return moment(this.end).format('YYYY-MM-DD')
+            const timestamp = moment()
+            return timestamp.add('days', 1).format('YYYY-MM-DD')
+        },
+        sortedPeriods: function() {
+            var values = []
+            Object.keys(this.periods).forEach((date) => {
+                if (this.periods[date].length > 0) {
+                    values.push({date: date, periods: this.periods[date]})
+                }
+            })
+            return values.sort(function(a, b) {
+                return moment(b.date) - moment(a.date)
+            })
         }
     },
     methods: {
 
         getPeriods: function() {
-            const url = process.env.VUE_APP_BACKEND_URL + '/data'
+            const url = process.env.VUE_APP_BACKEND_URL + `/data/${this.startDate}/${this.endDate}?group=true`
             let vm = this
 
             axios({
@@ -46,7 +59,7 @@ export default {
                     text: 'successfully retrieved historical data'
                 })
                 // asign payload to variable
-                vm.periods = response.data.data.workPeriods
+                vm.periods = response.data.data
             }).catch(function (error) {
                 console.log("error fetching active work period: API return status code " + error.response.status)
                 if (error.response.status === 401) {
@@ -63,9 +76,7 @@ export default {
         }
     },
     data: () => ({
-        start: "2020-09-13",
-        end: "2020-09-21",
-        periods: []
+        periods: {}
     }),
     mounted() {
         this.getPeriods()
