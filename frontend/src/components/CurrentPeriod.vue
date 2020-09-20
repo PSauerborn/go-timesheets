@@ -12,7 +12,10 @@
                 </v-col>
                 <v-col cols=5 align="center" justify="center">
                     <v-card-text>
-                        <v-btn color="red" :outlined=true @click="endCurrentWorkPeriod">Stop Current Period</v-btn>
+                        <v-btn color="blue" :outlined=true>Start new Break Period</v-btn>
+                    </v-card-text>
+                    <v-card-text>
+                        <v-btn color="red" :outlined=true @click="endCurrentWorkPeriod">Stop Active Work Period</v-btn>
                     </v-card-text>
                 </v-col>
             </v-row>

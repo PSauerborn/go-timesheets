@@ -1,7 +1,7 @@
 <template>
     <v-row align="center" justify="center" class="application-tab-container">
         <v-row align="center" justify="center">
-            <v-col cols=8 align="center" justify="center">
+            <v-col cols=12 align="center" justify="center">
                 <DayCard v-for="(day, index) in sortedPeriods" :key="index" :payload="day" />
             </v-col>
         </v-row>
