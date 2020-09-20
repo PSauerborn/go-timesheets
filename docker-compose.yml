@@ -11,6 +11,12 @@ services:
     env_file:
     - .env
 
+  go-timesheets-frontend:
+    build: ./frontend
+    container_name: go-timesheets-frontend
+    networks:
+    - core
+
 networks:
   core:
     name: core
