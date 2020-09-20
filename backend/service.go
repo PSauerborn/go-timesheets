@@ -131,13 +131,13 @@ func createWorkPeriodHandler(ctx *gin.Context) {
     user := getUser(ctx)
     log.Debug(fmt.Sprintf("received request to create new work period for user %s", user))
     // create new work period in database
-    id, err := persistence.createWorkPeriod(user)
+    period, err := persistence.createWorkPeriod(user)
     if err != nil {
         log.Error(fmt.Errorf("unable to create new work period for user %s: %v", user, err))
         StandardHTTP.InternalServerError(ctx)
         return
     }
-    ctx.JSON(200, gin.H{"success": true, "http_code": 200, "id": id})
+    ctx.JSON(200, gin.H{"success": true, "http_code": 200, "payload": period})
 }
 
 func createBreakPeriodHandler(ctx *gin.Context) {

@@ -28,16 +28,17 @@ func ConnectPersistence() {
     persistence = &Persistence{db}
 }
 
-func(db Persistence) createWorkPeriod(uid string) (uuid.UUID, error) {
+func(db Persistence) createWorkPeriod(uid string) (ActiveWorkPeriod, error) {
     log.Debug(fmt.Sprintf("creating new work period for user %s", uid))
     periodId := uuid.New()
-    _, err := db.conn.Exec(context.Background(), "INSERT INTO work_periods(period_id, uid) VALUES($1,$2)", periodId, uid)
+    now := time.Now()
+    _, err := db.conn.Exec(context.Background(), "INSERT INTO work_periods(period_id, uid, created_at) VALUES($1,$2,$3)", periodId, uid, now)
     if err != nil {
         log.Error(fmt.Errorf("unable to create new work period: %v", err))
-        return periodId, err
+        return ActiveWorkPeriod{}, err
     }
     log.Info(fmt.Sprintf("successfully created new work period with ID %s", periodId))
-    return periodId, nil
+    return ActiveWorkPeriod{PeriodId: periodId, CreatedAt: now}, nil
 }
 
 func(db Persistence) createBreakPeriod(periodId uuid.UUID) (uuid.UUID, error) {

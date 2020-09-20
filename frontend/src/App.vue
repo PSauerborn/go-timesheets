@@ -1,21 +1,22 @@
 <template>
   <v-app>
     <v-main>
+      <notifications group="main" position="bottom right"/>
       <v-container>
         <v-row align="center" justify="center" class="application-title-container">
           <AppTitle />
         </v-row>
         <v-row align="center" justify="center">
-          <v-tabs centered="true">
-            <v-tab class="application-tab-title">Current</v-tab>
+          <v-tabs :centered=true>
+            <v-tab class="application-tab-title"><v-icon class="tab-icon">mdi-blur</v-icon>Current</v-tab>
             <v-tab-item>
               <CurrentPeriod />
             </v-tab-item>
-            <v-tab class="application-tab-title">History</v-tab>
+            <v-tab class="application-tab-title"><v-icon class="tab-icon">mdi-format-list-text</v-icon>History</v-tab>
             <v-tab-item>
               <History />
             </v-tab-item>
-            <v-tab class="application-tab-title">Analytics</v-tab>
+            <v-tab class="application-tab-title"><v-icon class="tab-icon">mdi-chart-donut-variant</v-icon>Analytics</v-tab>
             <v-tab-item>
               <Analytics />
             </v-tab-item>
@@ -32,6 +33,7 @@ import AppTitle from './components/AppTitle';
 import Analytics from './components/Analytics';
 import History from './components/History';
 import CurrentPeriod from './components/CurrentPeriod';
+import shared from './shared';
 
 export default {
   name: 'App',
@@ -46,6 +48,13 @@ export default {
   data: () => ({
     //
   }),
+  beforeMount: function() {
+      console.log(process.env.VUE_APP_DEVELOPMENT_MODE)
+      if (process.env.VUE_APP_DEVELOPMENT_MODE === "true") {
+        shared.setDevToken()
+      }
+      shared.getAccessToken()
+    }
 };
 </script>
 
@@ -64,4 +73,7 @@ export default {
   margin: 20px;
 }
 
+.tab-icon {
+  margin-right: 10px;
+}
 </style>
