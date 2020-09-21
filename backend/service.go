@@ -15,40 +15,45 @@ var (
 )
 
 func main() {
-
+    // configure environment variables and connect persistence layer to database
     ConfigureService()
     ConnectPersistence()
 
     router := gin.New()
 
+    // create handlers for user data routes
     router.GET("/go-timesheets/health", healthCheckHandler)
     router.GET("/go-timesheets/active", getActivePeriodHandler)
     router.GET("/go-timesheets/data", getUserDataHandler)
     router.GET("/go-timesheets/data/:start/:end", getUserTimeRangeDataHandler)
-
+    // create handlers for user data analysis routes
     router.GET("/go-timesheets/analyse", getUserAnalysisHandler)
     router.GET("/go-timesheets/analyse/:start/:end", getUserTimeRangeAnalysisHandler)
-
+    // create handlers to create work and break periods
     router.POST("/go-timesheets/work_period", createWorkPeriodHandler)
     router.POST("/go-timesheets/break_period/:periodId", createBreakPeriodHandler)
-
+    // create handlers to end work and break periods
     router.PATCH("/go-timesheets/work_period/:periodId", endWorkPeriodHandler)
     router.PATCH("/go-timesheets/break_period/:breakId", endBreakPeriodHandler)
 
     router.Run(fmt.Sprintf(":%d", ListenPort))
 }
 
-
+// function used to retrieve authenticated user ID from header
 func getUser(ctx *gin.Context) string {
     return ctx.Request.Header.Get("X-Authenticated-Userid")
 }
 
+// handler function used for basic health checks
 func healthCheckHandler(ctx *gin.Context) {
     log.Debug("received request for health check route")
     StandardHTTP.Success(ctx)
 }
 
+// function used to retrieve current active period from database
+// note that a 404 response is returned if no active period exists
 func getActivePeriodHandler(ctx *gin.Context) {
+    // retrieve current user and get active period
     user := getUser(ctx)
     log.Debug(fmt.Sprintf("received request to get active peroid for user %s", user))
     period, err := persistence.getActivePeriod(user)
@@ -65,6 +70,7 @@ func getActivePeriodHandler(ctx *gin.Context) {
     ctx.JSON(200, gin.H{"success": true, "http_code": 200, "payload": period})
 }
 
+// function used to retrieve user data from database
 func getUserDataHandler(ctx *gin.Context) {
     user := getUser(ctx)
     log.Debug(fmt.Sprintf("received request to get user data for user %s", user))
@@ -78,8 +84,10 @@ func getUserDataHandler(ctx *gin.Context) {
     ctx.JSON(200, gin.H{"success": true, "http_code": 200, "data": data})
 }
 
+// function used to retrieve user data from database for specific time range
 func getUserTimeRangeDataHandler(ctx *gin.Context) {
     user := getUser(ctx)
+    // get start and end time from url and parse into time.Time objects
     start, end, err := parseTimestamps(ctx.Param("start"), ctx.Param("end"))
     if err != nil {
         log.Error(fmt.Errorf("unable to parse timestamps: %v", err))
@@ -105,6 +113,7 @@ func getUserTimeRangeDataHandler(ctx *gin.Context) {
     }
 }
 
+// function used to return aggregated results for user data
 func getUserAnalysisHandler(ctx *gin.Context) {
     user := getUser(ctx)
     log.Debug(fmt.Sprintf("received analysis request for user %s", user))
@@ -117,15 +126,17 @@ func getUserAnalysisHandler(ctx *gin.Context) {
     ctx.JSON(200, gin.H{"success": true, "http_code": 200, "payload": results})
 }
 
+// function used to return aggregated results for user over a specific time range
 func getUserTimeRangeAnalysisHandler(ctx *gin.Context) {
     user := getUser(ctx)
+    // get start and end time from url and parse into time.Time objects
     start, end, err := parseTimestamps(ctx.Param("start"), ctx.Param("end"))
     if err != nil {
         log.Error(fmt.Errorf("unable to parse timestamps: %v", err))
         StandardHTTP.InvalidRequest(ctx)
         return
     }
-
+    // analyse users tasks over time range
     log.Debug(fmt.Sprintf("received time range analysis request for user %s", user))
     results, err := analyseRangedUserTasks(user, start, end)
     if err != nil {
@@ -136,6 +147,7 @@ func getUserTimeRangeAnalysisHandler(ctx *gin.Context) {
     ctx.JSON(200, gin.H{"success": true, "http_code": 200, "payload": results})
 }
 
+// function used to create a new work period in the database
 func createWorkPeriodHandler(ctx *gin.Context) {
     user := getUser(ctx)
     log.Debug(fmt.Sprintf("received request to create new work period for user %s", user))
@@ -149,8 +161,10 @@ func createWorkPeriodHandler(ctx *gin.Context) {
     ctx.JSON(200, gin.H{"success": true, "http_code": 200, "payload": period})
 }
 
+// function used to create new break period in database
 func createBreakPeriodHandler(ctx *gin.Context) {
     user := getUser(ctx)
+    // retrieve and parse period id from URL
     periodId, err := uuid.Parse(ctx.Param("periodId"))
     if err != nil {
         log.Error(fmt.Sprintf("received invalid period ID"))
@@ -169,6 +183,7 @@ func createBreakPeriodHandler(ctx *gin.Context) {
     ctx.JSON(200, gin.H{"success": true, "http_code": 200, "id": id})
 }
 
+// function used to end a specific work period
 func endWorkPeriodHandler(ctx *gin.Context) {
     periodId, err := uuid.Parse(ctx.Param("periodId"))
     if err != nil {
@@ -199,6 +214,7 @@ func endWorkPeriodHandler(ctx *gin.Context) {
     ctx.JSON(200, gin.H{"success": true, "http_code": 200, "message": fmt.Sprintf("successfully closed work period %s", periodId)})
 }
 
+// function used to end a particular break period
 func endBreakPeriodHandler(ctx *gin.Context) {
     breakId, err := uuid.Parse(ctx.Param("breakId"))
     if err != nil {

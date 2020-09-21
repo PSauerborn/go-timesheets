@@ -1,0 +1,444 @@
+openapi: 3.0.0
+info:
+  title: Go-Timesheets API
+  description: Backend service used to handle user timesheet data
+  version: 0.0.1
+
+servers:
+  - url: https://project-gateway.app/api/go-timesheets
+    description: main production server
+
+security:
+  - BearerAuth: []
+
+tags:
+- name: data routes
+  description: routes used to retrieve user data
+- name: analysis routes
+  description: routes used to analyse user data
+
+paths:
+  /health:
+    get:
+      summary: health check route for service
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: response containing JSON response for health of API
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheck'
+  /active:
+    get:
+      summary: route used to retrieve active work period
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: response containing active period in JSON format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivePeriodResponse'
+        401:
+          description: JSON response containing unauthorized response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+        404:
+          description: JSON response returned if no active period is found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+        500:
+          description: JSON response containing internal server error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+
+  /work_period:
+    post:
+      summary: route used create new work period in database
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: response containing user data in JSON format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericResponse'
+        401:
+          description: JSON response containing unauthorized response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+        500:
+          description: JSON response containing internal server error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+
+  /break_period/{periodId}:
+    post:
+      summary: route used to end specific work period in database
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: periodId
+          schema:
+            type: string
+          description: period ID used to generate break
+          required: true
+      responses:
+        200:
+          description: response containing user data in JSON format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericResponse'
+        400:
+          description: JSON response containing invalid request message
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidRequest'
+        401:
+          description: JSON response containing unauthorized response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+        500:
+          description: JSON response containing internal server error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+
+  /work_period/{periodId}:
+    patch:
+      summary: route used to end specific break period in database
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: periodId
+          schema:
+            type: string
+          description: ID of work period to end
+          required: true
+      responses:
+        200:
+          description: response containing user data in JSON format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericResponse'
+        400:
+          description: JSON response containing invalid request message
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidRequest'
+        401:
+          description: JSON response containing unauthorized response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+        500:
+          description: JSON response containing internal server error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+
+  /break_period/{breakId}:
+    patch:
+      summary: route used create new break period in database
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: breakId
+          schema:
+            type: string
+          description: ID of break period to end
+          required: true
+      responses:
+        200:
+          description: response containing user data in JSON format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericResponse'
+        400:
+          description: JSON response containing invalid request message
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidRequest'
+        401:
+          description: JSON response containing unauthorized response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+        500:
+          description: JSON response containing internal server error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+
+  /data:
+    get:
+      summary: route used to retrieve user data
+      tags:
+        - data routes
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: response containing user data in JSON format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericResponse'
+        401:
+          description: JSON response containing unauthorized response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+        500:
+          description: JSON response containing internal server error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+
+  /data/{start}/{end}:
+    get:
+      summary: route used to retrieve user data over specific time period
+      tags:
+        - data routes
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: start
+          schema:
+            type: string
+          description: start timestamp of period
+          required: true
+        - in: path
+          name: end
+          schema:
+            type: string
+          description: end timestamp of period
+          required: true
+      responses:
+        200:
+          description: response containing active period in JSON format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericResponse'
+        400:
+          description: JSON response containing invalid request message
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidRequest'
+        401:
+          description: JSON response containing unauthorized response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+        500:
+          description: JSON response containing internal server error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+
+  /analyse:
+    get:
+      summary: route used to retrieve user data analysis
+      tags:
+        - analysis routes
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: response containing user data in JSON format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericResponse'
+        401:
+          description: JSON response containing unauthorized response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+        500:
+          description: JSON response containing internal server error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+
+  /analyze/{start}/{end}:
+    get:
+      summary: route used to retrieve user data analysis over specific time period
+      tags:
+        - analysis routes
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: start
+          schema:
+            type: string
+          description: start timestamp of period
+          required: true
+        - in: path
+          name: end
+          schema:
+            type: string
+          description: end timestamp of period
+          required: true
+      responses:
+        200:
+          description: response containing active period in JSON format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericResponse'
+        400:
+          description: JSON response containing invalid request message
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidRequest'
+        401:
+          description: JSON response containing unauthorized response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+        500:
+          description: JSON response containing internal server error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    HealthCheck:
+      properties:
+        http_code:
+          type: integer
+          example: 200
+        success:
+           type: boolean
+           example: true
+        message:
+          type: string
+          example: success
+    InternalServerError:
+      properties:
+        http_code:
+          type: integer
+          example: 500
+        success:
+           type: boolean
+           example: false
+        message:
+          type: string
+          example: internal server error
+    NotFound:
+      properties:
+        http_code:
+          type: integer
+          example: 404
+        success:
+           type: boolean
+           example: false
+        message:
+          type: string
+          example: not found
+    Unauthorized:
+      properties:
+        http_code:
+          type: integer
+          example: 401
+        success:
+           type: boolean
+           example: false
+        message:
+          type: string
+          example: unauthorized
+    InvalidRequest:
+      properties:
+        http_code:
+          type: integer
+          example: 400
+        success:
+           type: boolean
+           example: false
+        message:
+          type: string
+          example: invalid request
+    GenericResponse:
+      properties:
+        http_code:
+          type: integer
+          example: 200
+        success:
+           type: boolean
+           example: true
+        payload:
+          type: object
+    ActivePeriodResponse:
+      properties:
+        http_code:
+          type: integer
+          example: 200
+        success:
+           type: boolean
+           example: true
+        message:
+          type: string
+          example: success
+        payload:
+          type: object
+          properties:
+            periodId:
+              type: string
+              example: 5bbe4368-0c38-43a6-be18-0d2018e17fd2
+            createdAt:
+              type: string
+              example: '2020-09-10T12:56:56'
+            activeSince:
+              type: number
+              example: 12.7
+

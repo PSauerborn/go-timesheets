@@ -13,7 +13,8 @@ var (
 
 )
 
-
+// function used to evaluate if a given work period ID
+// is valid or not
 func isValidWorkPeriod(periodId uuid.UUID) (bool, error) {
     _, err := persistence.getWorkPeriod(periodId)
     if err != nil {
@@ -27,6 +28,8 @@ func isValidWorkPeriod(periodId uuid.UUID) (bool, error) {
     return true, nil
 }
 
+// function used to evaluate if a given break period ID
+// is valid or not
 func isValidBreakPeriod(breakId uuid.UUID) (bool, error) {
     _, err := persistence.getBreakPeriod(breakId)
     if err != nil {
@@ -40,10 +43,8 @@ func isValidBreakPeriod(breakId uuid.UUID) (bool, error) {
     return true, nil
 }
 
-func userOwnsPeriod(uid string, periodId uuid.UUID) bool {
-    return true
-}
-
+// function used to parse time strings into datetime values. timestrings
+// need to be in YYYY-MM-DD format in order to be properly parsed
 func parseTimestamps(start, end string) (time.Time, time.Time, error) {
     layout := "2006-01-02"
     //parse start time
@@ -63,25 +64,4 @@ func parseTimestamps(start, end string) (time.Time, time.Time, error) {
         return startTime, endTime, errors.New("start time cannot be larger than end time")
     }
     return startTime, endTime, nil
-}
-
-
-func aggregatePeriods(periods []WorkPeriod, date time.Time) []WorkPeriod {
-    aggregate := []WorkPeriod{}
-    for _, period := range(periods) {
-        if (period.CreatedAt.After(date) && period.CreatedAt.Before(date.Add(time.Hour * 24))) {
-            aggregate = append(aggregate, period)
-        }
-    }
-    return aggregate
-}
-
-func groupPeriodsByDay(periods []WorkPeriod, start, end time.Time) map[string][]WorkPeriod {
-    aggregatedPeriods := map[string][]WorkPeriod{}
-    date := start
-    for date.Before(end) {
-        aggregatedPeriods[date.Format("2006-01-02")] = aggregatePeriods(periods, date)
-        date = date.Add(time.Hour * 24)
-    }
-    return aggregatedPeriods
 }
