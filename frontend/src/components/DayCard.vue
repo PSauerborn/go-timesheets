@@ -13,11 +13,27 @@
                                 Date: {{ payload.date }}
                             </v-card-subtitle>
                         </v-col>
-                        <v-col cols=6 align="right" justify="right">
-                            <v-row class="metric" align="center" justify="center">
-                                {{ netWorkHours }}
+                        <v-col cols=2 align="right" justify="right">
+                            <v-row class="header-metric" align="center" justify="center">
+                                {{ start }}
                             </v-row>
                             <v-row class="metric-text-box" align="center" justify="center">
+                                Start
+                            </v-row>
+                        </v-col>
+                        <v-col cols=2 align="right" justify="right">
+                            <v-row class="header-metric" align="center" justify="center">
+                                {{ end }}
+                            </v-row>
+                            <v-row class="header-metric-text-box" align="center" justify="center">
+                                End
+                            </v-row>
+                        </v-col>
+                        <v-col cols=2 align="right" justify="right">
+                            <v-row class="header-metric" align="center" justify="center">
+                                {{ netWorkHours }}
+                            </v-row>
+                            <v-row class="header-metric-text-box" align="center" justify="center">
                                 Net Work Hours
                             </v-row>
                         </v-col>
@@ -173,6 +189,19 @@ export default {
 
 .metric {
     font-size: 55px;
+    font-weight: bold;
+    font-family: 'Allura', 'Avenir', Helvetica, Arial, sans-serif;
+    margin-bottom: 10px;
+}
+
+.header-metric-text-box {
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.header-metric {
+    margin-top: 15px;
+    font-size: 30px;
     font-weight: bold;
     font-family: 'Allura', 'Avenir', Helvetica, Arial, sans-serif;
     margin-bottom: 10px;
