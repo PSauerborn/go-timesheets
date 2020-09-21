@@ -174,13 +174,13 @@ func createBreakPeriodHandler(ctx *gin.Context) {
 
     log.Debug(fmt.Sprintf("received request to create new bread period for user %s", user))
     // create new work period in database
-    id, err := persistence.createBreakPeriod(periodId)
+    payload, err := persistence.createBreakPeriod(periodId)
     if err != nil {
         log.Error(fmt.Errorf("unable to create new break period for user %s: %v", user, err))
         StandardHTTP.InternalServerError(ctx)
         return
     }
-    ctx.JSON(200, gin.H{"success": true, "http_code": 200, "id": id})
+    ctx.JSON(200, gin.H{"success": true, "http_code": 200, "payload": payload})
 }
 
 // function used to end a specific work period

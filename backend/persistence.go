@@ -44,17 +44,18 @@ func(db Persistence) createWorkPeriod(uid string) (ActiveWorkPeriod, error) {
 }
 
 // function used to create new break period in database
-func(db Persistence) createBreakPeriod(periodId uuid.UUID) (uuid.UUID, error) {
+func(db Persistence) createBreakPeriod(periodId uuid.UUID) (ActiveBreakPeriod, error) {
     log.Debug(fmt.Sprintf("creating new break period for work period %s", periodId))
     breakId := uuid.New()
+    now := time.Now()
     // create new break period and insert into database
-    _, err := db.conn.Exec(context.Background(), "INSERT INTO break_periods(break_id, period_id) VALUES($1,$2)", breakId, periodId)
+    _, err := db.conn.Exec(context.Background(), "INSERT INTO break_periods(break_id, period_id, created_at) VALUES($1,$2,$3)", breakId, periodId, now)
     if err != nil {
         log.Error(fmt.Errorf("unable to create new work period: %v", err))
-        return breakId, err
+        return ActiveBreakPeriod{}, err
     }
     log.Info(fmt.Sprintf("successfully created new break period %s", breakId))
-    return breakId, nil
+    return ActiveBreakPeriod{BreakId: breakId, CreatedAt: now}, nil
 }
 
 // function used to retrieve user data. all work periods are
