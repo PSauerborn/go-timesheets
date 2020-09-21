@@ -16,15 +16,16 @@ type WorkPeriod struct {
     Breaks 	   []BreakPeriod `json:"breaks"`
 }
 
-type ActiveWorkPeriod struct {
-    PeriodId    uuid.UUID `json:"periodId"`
-    CreatedAt   time.Time `json:"createdAt"`
-    ActiveSince float64   `json:"activeSince"`
-}
-
 func(period WorkPeriod) TotalHours() float64 {
     finished := *(period.FinishedAt)
     return finished.Sub(period.CreatedAt).Hours()
+}
+
+type ActiveWorkPeriod struct {
+    PeriodId    uuid.UUID          `json:"periodId"`
+    CreatedAt   time.Time          `json:"createdAt"`
+    ActiveSince float64            `json:"activeSince"`
+    ActiveBreak *ActiveBreakPeriod `json:"activeBreak"`
 }
 
 type BreakPeriod struct {
@@ -36,6 +37,11 @@ type BreakPeriod struct {
 func(period BreakPeriod) TotalHours() float64 {
     finished := *(period.FinishedAt)
     return finished.Sub(period.CreatedAt).Hours()
+}
+
+type ActiveBreakPeriod struct {
+    BreakId   uuid.UUID `json:"breakId"`
+    CreatedAt time.Time `json:"createdAt"`
 }
 
 type UserData struct {

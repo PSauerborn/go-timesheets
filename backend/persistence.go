@@ -241,7 +241,37 @@ func(db Persistence) getActivePeriod(uid string) (ActiveWorkPeriod, error) {
         log.Error(fmt.Errorf("unable to retrieve active user period for user %s", uid))
         return ActiveWorkPeriod{}, err
     }
+    // retrieve active work period from database
+    activeBreak, err := db.getActiveBreakPeriod(periodId)
+    if err != nil {
+        log.Error(fmt.Errorf("unable to retrieve active break period: %v", err))
+        return ActiveWorkPeriod{}, err
+    }
     // evaluate time that period has been active for given current date and created
     active := time.Now().Sub(createdAt)
-    return ActiveWorkPeriod{PeriodId: periodId, CreatedAt: createdAt, ActiveSince: active.Hours()}, nil
+    workPeriod := ActiveWorkPeriod{
+        PeriodId: periodId,
+        CreatedAt: createdAt,
+        ActiveSince: active.Hours(),
+        ActiveBreak: activeBreak,
+    }
+    return workPeriod, nil
+}
+
+func(db Persistence) getActiveBreakPeriod(periodId uuid.UUID) (*ActiveBreakPeriod, error) {
+    log.Debug(fmt.Sprintf("retrieving active break period for period ID %s", periodId))
+
+    var (breakId uuid.UUID; created time.Time)
+    result := db.conn.QueryRow(context.Background(), "SELECT break_id, created_at FROM break_periods WHERE period_id=$1 AND finished_at IS NULL ORDER BY created_at DESC LIMIT 1", periodId)
+    err := result.Scan(&breakId, &created)
+    if err != nil {
+        switch err {
+        case pgx.ErrNoRows:
+            return nil, nil
+        default:
+            log.Error(fmt.Errorf("unable to retreive active break period"))
+            return nil, err
+        }
+    }
+    return &ActiveBreakPeriod{BreakId: breakId, CreatedAt: created}, nil
 }
