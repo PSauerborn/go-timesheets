@@ -1,6 +1,9 @@
 <template>
     <v-row align="center" justify="center" class="application-tab-container">
         <v-row align="center" justify="center">
+            <v-col align="center" justify="center" v-if="sortedPeriods.length < 1">
+                No historical data found. Completed some work periods to see historic data
+            </v-col>
             <v-col cols=12 align="center" justify="center">
                 <DayCard v-for="(day, index) in sortedPeriods" :key="index" :payload="day" />
             </v-col>

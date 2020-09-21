@@ -1,29 +1,55 @@
 <template>
     <v-card class="day-card" max-width="800">
-        <v-row>
-            <v-col cols=12>
+        <v-row dense>
+            <v-col cols=8 align="left" justify="left">
                 <v-card-title class="day-card-title">
-                    Date: {{ payload.date }}
+                    Period Summary
                 </v-card-title>
+                <v-card-subtitle class="day-card-title">
+                    Date: {{ payload.date }}
+                </v-card-subtitle>
             </v-col>
         </v-row>
         <v-divider class="mx-4"></v-divider>
-        <v-row align="center" justify="center">
-            <v-col cols=6 align="center" justify="center">
+        <v-row dense>
+            <v-col cols=6 align="left" justify="left">
                 <v-card-text>
                     <apexchart type="bar" :options="chartOptions" :series="chartData"/>
                 </v-card-text>
             </v-col>
             <v-divider :vertical=true></v-divider>
-            <v-col cols=4 align="left" justify="left">
-                <v-card-title>
-                    Period Summary
-                </v-card-title>
-                <v-divider></v-divider>
+            <v-col cols=5 align="center" justify="center" class="metric-container">
                 <v-card-text>
-                    Total Work Periods: {{ payload.periods.length }}<br>
-                    Start Timestamp: {{ start }}<br>
-                    End Timestamp: {{ end }}<br>
+                    <v-row align="center" justify="center">
+                        <v-col cols=12 align="center" justify="center">
+                            <v-row class="metric" align="center" justify="center">
+                                {{ payload.periods.length }}
+                            </v-row>
+                            <v-row class="metric-text-box" align="center" justify="center">
+                                Total Work Periods
+                            </v-row>
+                        </v-col>
+                    </v-row>
+                    <v-row align="center" justify="center">
+                        <v-col cols=12 align="center" justify="center">
+                            <v-row class="metric" align="center" justify="center">
+                                {{ start }}
+                            </v-row>
+                            <v-row class="metric-text-box" align="center" justify="center">
+                                Start Time
+                            </v-row>
+                        </v-col>
+                    </v-row>
+                    <v-row align="center" justify="center">
+                        <v-col cols=12 align="center" justify="center">
+                            <v-row class="metric" align="center" justify="center">
+                                {{ end }}
+                            </v-row>
+                            <v-row class="metric-text-box" align="center" justify="center">
+                                End Time
+                            </v-row>
+                        </v-col>
+                    </v-row>
                 </v-card-text>
             </v-col>
         </v-row>
@@ -114,8 +140,26 @@ export default {
 
 <style scoped>
 
+@import url('https://fonts.googleapis.com/css?family=Allura&display=swap');
+
 .day-card {
     margin-bottom: 30px;
+}
+
+.metric-text-box {
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.metric {
+    font-size: 55px;
+    font-weight: bold;
+    font-family: 'Allura', 'Avenir', Helvetica, Arial, sans-serif;
+    margin-bottom: 10px;
+}
+
+.metric-container {
+    padding-top: 18px;
 }
 
 </style>
