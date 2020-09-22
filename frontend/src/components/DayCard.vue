@@ -63,20 +63,20 @@
                                 <v-row align="center" justify="center">
                                     <v-col cols=12 align="center" justify="center">
                                         <v-row class="metric" align="center" justify="center">
-                                            {{ start }}
+                                            {{ breakCount }}
                                         </v-row>
                                         <v-row class="metric-text-box" align="center" justify="center">
-                                            Start Time
+                                            Total Break Periods
                                         </v-row>
                                     </v-col>
                                 </v-row>
                                 <v-row align="center" justify="center">
                                     <v-col cols=12 align="center" justify="center">
                                         <v-row class="metric" align="center" justify="center">
-                                            {{ end }}
+                                            {{ averageBreakLength }}
                                         </v-row>
                                         <v-row class="metric-text-box" align="center" justify="center">
-                                            End Time
+                                            Average Break Length
                                         </v-row>
                                     </v-col>
                                 </v-row>
@@ -108,15 +108,23 @@ export default {
     },
     computed: {
         hoursWorked: function() {
-            var value = 0
+            var value = 0;
             this.payload.periods.forEach((period) => {
                 const timespan = moment.duration((moment(period.finishedAt).diff(moment(period.createdAt))))
                 value += timespan.asHours()
             })
             return Math.round(value * 10) / 10
         },
+        breakCount: function() {
+            var count = 0;
+            const periods = this.payload.periods;
+            periods.forEach((period) => {
+                count += period.breaks.length
+            })
+            return count
+        },
         breakHours: function() {
-            var value = 0
+            var value = 0;
             const periods = this.payload.periods;
             periods.forEach((period) => {
                 period.breaks.forEach((breakPeriod) => {
@@ -125,6 +133,12 @@ export default {
                 })
             })
             return Math.round(value * 10) / 10
+        },
+        averageBreakLength: function() {
+            if (this.breakCount > 0) {
+                return this.breakHours / this.breakCount
+            }
+            return 0
         },
         netWorkHours: function() {
             return this.hoursWorked - this.breakHours
