@@ -60,6 +60,8 @@ export default {
 
 <style>
 
+@import url('https://fonts.googleapis.com/css?family=Ubuntu&display=swap');
+
 .application-tab-container {
   margin: 30px;
 }
@@ -75,5 +77,9 @@ export default {
 
 .tab-icon {
   margin-right: 10px;
+}
+
+#app {
+  font-family: 'Ubuntu', 'Avenir', Helvetica, Arial, sans-serif;
 }
 </style>

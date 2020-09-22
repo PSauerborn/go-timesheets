@@ -158,6 +158,7 @@ export default {
                     show: false
                 }
             },
+            colors: ['#F44336', '#2196F3', '#4CAF50'],
             xaxis: {
                 categories: ['Total', 'Break', 'Net']
             },
@@ -166,7 +167,8 @@ export default {
             },
             plotOptions: {
                 bar: {
-                    horizontal: true
+                    horizontal: true,
+                    distributed: true
                 }
             }
         }
@@ -184,7 +186,7 @@ export default {
 
 .metric-text-box {
     font-size: 12px;
-    font-weight: bold;
+    text-transform: uppercase;
 }
 
 .metric {
@@ -196,7 +198,7 @@ export default {
 
 .header-metric-text-box {
     font-size: 12px;
-    font-weight: bold;
+    text-transform: uppercase;
 }
 
 .header-metric {
