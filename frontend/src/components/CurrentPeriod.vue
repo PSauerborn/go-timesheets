@@ -16,7 +16,7 @@
                         <v-btn v-if="inBreak" color="orange" :outlined=true @click="stopCurrentBreakPeriod">Finish Break Period</v-btn>
                     </v-card-text>
                     <v-card-text>
-                        <v-btn color="red" :outlined=true @click="endCurrentWorkPeriod">Stop Active Work Period</v-btn>
+                        <v-btn color="red" :outlined=true @click="endCurrentWorkPeriod" :disabled="inBreak">Stop Active Work Period</v-btn>
                     </v-card-text>
                 </v-col>
             </v-row>
