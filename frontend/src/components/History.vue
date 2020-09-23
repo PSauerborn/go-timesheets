@@ -74,7 +74,7 @@ export default {
             var breaks = 0;
             const periodList = Object.values(this.periods)
 
-            if (periodList.length > 1) {
+            if (periodList.length < 1) {
                 return {workedHours: 0, breakHours: 0, netWorkHours: 0}
             }
 
