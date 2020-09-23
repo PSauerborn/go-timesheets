@@ -10,11 +10,11 @@
           <v-tabs :centered=true>
             <v-tab class="application-tab-title"><v-icon class="tab-icon">mdi-blur</v-icon>Current</v-tab>
             <v-tab-item>
-              <CurrentPeriod />
+              <CurrentPeriod @endedWorkPeriod="refreshHistory" />
             </v-tab-item>
             <v-tab class="application-tab-title"><v-icon class="tab-icon">mdi-format-list-text</v-icon>History</v-tab>
             <v-tab-item>
-              <History />
+              <History ref="history"/>
             </v-tab-item>
             <v-tab class="application-tab-title"><v-icon class="tab-icon">mdi-chart-donut-variant</v-icon>Analytics</v-tab>
             <v-tab-item>
@@ -44,7 +44,11 @@ export default {
     History,
     CurrentPeriod
   },
-
+  methods: {
+    refreshHistory: function() {
+      this.$refs.history.getPeriods()
+    }
+  },
   data: () => ({
     //
   }),

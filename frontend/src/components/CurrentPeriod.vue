@@ -267,6 +267,7 @@ export default {
                     text: 'successfully ended work period'
                 })
                 vm.activePeriod = null
+                vm.$emit('endedWorkPeriod')
             }).catch(function (error) {
                 console.log("error fetching active work period: API return status code " + error.response.status)
                 if (error.response.status === 401) {

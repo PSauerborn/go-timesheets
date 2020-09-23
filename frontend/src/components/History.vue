@@ -45,7 +45,6 @@ export default {
         }
     },
     methods: {
-
         getPeriods: function() {
             const url = process.env.VUE_APP_BACKEND_URL + `/data/${this.startDate}/${this.endDate}?group=true`
             let vm = this
