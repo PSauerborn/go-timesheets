@@ -1,14 +1,40 @@
 <template>
-    <v-row align="center" justify="center" class="application-tab-container">
-        <v-row align="center" justify="center">
-            <v-col align="center" justify="center" v-if="sortedPeriods.length < 1">
+    <v-container align="center" justify="center" class="application-tab-container">
+        <v-row align="center" justify="center" style="margin-bottom: 20px;" dense>
+            <v-col cols=12 align="center" justify="center" v-if="sortedPeriods.length < 1">
                 No historical data found. Complete some work periods to see historic data
             </v-col>
+            <v-col cols=1 align="center" justify="center" v-if="sortedPeriods.length > 0">
+                <v-row align="center" justify="center" class="metric" dense>
+                    {{ totalWorkHours.workedHours }}
+                </v-row>
+                <v-row align="center" justify="center" class="metric-text-box" dense>
+                    total hours worked
+                </v-row>
+            </v-col>
+            <v-col cols=1 align="center" justify="center" v-if="sortedPeriods.length > 0">
+                <v-row align="center" justify="center" class="metric" dense>
+                    {{ totalWorkHours.breakHours }}
+                </v-row>
+                <v-row align="center" justify="center" class="metric-text-box" dense>
+                    total break hours
+                </v-row>
+            </v-col>
+            <v-col cols=1 align="center" justify="center" v-if="sortedPeriods.length > 0">
+                <v-row align="center" justify="center" class="metric" dense>
+                    {{ totalWorkHours.workedHours - totalWorkHours.breakHours }}
+                </v-row>
+                <v-row align="center" justify="center" class="metric-text-box" dense>
+                    net work hours
+                </v-row>
+            </v-col>
+        </v-row>
+        <v-row align="center" justify="center">
             <v-col cols=12 align="center" justify="center">
                 <DayCard v-for="(day, index) in sortedPeriods" :key="index" :payload="day" />
             </v-col>
         </v-row>
-    </v-row>
+    </v-container>
 </template>
 
 <script>
@@ -42,6 +68,23 @@ export default {
             return values.sort(function(a, b) {
                 return moment(b.date) - moment(a.date)
             })
+        },
+        totalWorkHours: function() {
+            var worked = 0;
+            var breaks = 0;
+            const periodList = Object.values(this.periods)
+
+            periodList.forEach((periods) => {
+                periods.forEach((period) => {
+                    const timespan = moment.duration((moment(period.finishedAt).diff(moment(period.createdAt))))
+                    worked += timespan.asHours()
+                    period.breaks.forEach((breakPeriod) => {
+                        const timespan = moment.duration((moment(breakPeriod.finishedAt).diff(moment(breakPeriod.createdAt))))
+                        breaks += timespan.asHours()
+                    })
+                })
+            })
+            return {workedHours: Math.round(worked * 10) / 10, breakHours: Math.round(breaks * 10) / 10}
         }
     },
     methods: {
@@ -85,3 +128,22 @@ export default {
     }
 }
 </script>
+
+<style scoped>
+
+@import url('https://fonts.googleapis.com/css?family=Allura&display=swap');
+
+.metric-text-box {
+    font-size: 12px;
+    text-transform: uppercase;
+    padding-bottom: 0px;
+    margin-bottom: 0px;
+}
+
+.metric {
+    font-size: 55px;
+    font-weight: bold;
+    font-family: 'Allura', 'Avenir', Helvetica, Arial, sans-serif;
+    margin-bottom: 0px;
+}
+</style>
