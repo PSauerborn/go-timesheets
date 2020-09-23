@@ -22,7 +22,7 @@
             </v-col>
             <v-col cols=1 align="center" justify="center" v-if="sortedPeriods.length > 0">
                 <v-row align="center" justify="center" class="metric" dense>
-                    {{ totalWorkHours.workedHours - totalWorkHours.breakHours }}
+                    {{ totalWorkHours.netWorkHours }}
                 </v-row>
                 <v-row align="center" justify="center" class="metric-text-box" dense>
                     net work hours
@@ -84,7 +84,12 @@ export default {
                     })
                 })
             })
-            return {workedHours: Math.round(worked * 10) / 10, breakHours: Math.round(breaks * 10) / 10}
+            return {
+                workedHours: Math.round(worked * 10) / 10,
+                breakHours: Math.round(breaks * 10) / 10,
+                netWorkHours: Math.round((worked - breaks) * 10) / 10
+            }
+
         }
     },
     methods: {
