@@ -8,6 +8,7 @@ import (
     "github.com/google/uuid"
     "github.com/jackc/pgx/v4"
     log "github.com/sirupsen/logrus"
+    jaeger "github.com/PSauerborn/jaeger-negroni"
 )
 
 var (
@@ -19,7 +20,12 @@ func main() {
     ConfigureService()
     ConnectPersistence()
 
+    config := jaeger.Config("jaeger-agent", "go-timesheets-api", 6831)
+    tracer := jaeger.NewTracer(config)
+    defer tracer.Close()
+
     router := gin.New()
+    router.Use(jaeger.JaegerNegroni(config))
 
     // create handlers for user data routes
     router.GET("/go-timesheets/health", healthCheckHandler)
