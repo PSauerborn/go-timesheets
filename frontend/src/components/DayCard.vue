@@ -141,7 +141,7 @@ export default {
             return 0
         },
         netWorkHours: function() {
-            return this.hoursWorked - this.breakHours
+            return Math.round((this.hoursWorked - this.breakHours) * 10) / 10
         },
         chartData: function() {
             return [{name: this.payload.date, data: [this.hoursWorked, this.breakHours, this.netWorkHours]}]
