@@ -21,10 +21,11 @@ func(metric UserIDMetric) MetricName() string {
     return "uid"
 }
 
-func(metric UserIDMetric) EvaluateMetric(ctx *gin.Context) string {
-    return getUser(ctx)
+func(metric UserIDMetric) EvaluateMetric(ctx *gin.Context) interface{} {
+    user := getUser(ctx)
+    log.Debug(fmt.Sprintf("setting jaeger spans with user ID %s", user))
+    return user
 }
-
 
 func main() {
     // configure environment variables and connect persistence layer to database
@@ -33,7 +34,9 @@ func main() {
 
     // create new jaeger config and add uid metric
     config := jaeger.Config("jaeger-agent", "go-timesheets-api", 6831)
-    config.AddPreRequestMetric(UserIDMetric{})
+    config.PreRequestMetrics = append(config.PreRequestMetrics, UserIDMetric{})
+
+    log.Debug(config.PreRequestMetrics)
 
     tracer := jaeger.NewTracer(config)
     defer tracer.Close()

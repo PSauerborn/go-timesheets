@@ -94,3 +94,41 @@ func groupPeriodsByDay(periods []WorkPeriod, start, end time.Time) map[string][]
     }
     return aggregatedPeriods
 }
+
+// ###########################################################
+// # Define functions used to bucket and analyse bucketed data
+// ###########################################################
+
+// function used to analyse bucketed data
+// func analyseBuckets(buckets map[time.Time]WorkPeriod) {
+//     for bucket, periods := range(buckets) {
+//         log.Debug(fmt.Sprintf("processing bucket %+v with %d periods", bucket, len(periods)))
+//     }
+// }
+
+// function used to determine if period falls within a given bucket
+func fallsInBucket(period WorkPeriod, date time.Time, bucket int) bool {
+    return period.CreatedAt.After(date) && period.CreatedAt.Before(date.Add(time.Minute * time.Duration(bucket)))
+}
+
+// function used to bucket periods around a given date
+func bucket(periods []WorkPeriod, date time.Time, bucket int) []WorkPeriod {
+    aggregated := []WorkPeriod{}
+    for _, period := range(periods) {
+        if fallsInBucket(period, date, bucket) {
+            aggregated = append(aggregated, period)
+        }
+    }
+    return aggregated
+}
+
+// function used to bucket periods by a bucket size (given in minutes)
+func bucketPeriods(periods []WorkPeriod, start, end time.Time, bucketSize int) map[time.Time][]WorkPeriod {
+    log.Debug(fmt.Sprintf("bucketing periods over date range %s - %s with bucket %d", start, end, bucketSize))
+    bucketed := map[time.Time][]WorkPeriod{}
+    for start.Before(end) {
+        bucketed[start] = bucket(periods, start, bucketSize)
+        start = start.Add(time.Minute * time.Duration(bucketSize))
+    }
+    return bucketed
+}

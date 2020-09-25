@@ -24,4 +24,6 @@ RUN chmod +x ./go-timesheets
 
 EXPOSE 10091
 
+ENV GIN_MODE=release
+
 CMD [ "./go-timesheets" ]
