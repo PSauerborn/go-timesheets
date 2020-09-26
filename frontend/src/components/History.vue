@@ -1,10 +1,23 @@
 <template>
     <v-container align="center" justify="center" class="application-tab-container">
         <v-row align="center" justify="center" style="margin-bottom: 20px;" dense>
-            <v-col cols=12 align="center" justify="center" v-if="sortedPeriods.length < 1">
-                No historical data found. Complete some work periods to see historic data
+            <v-col cols=2 align="center" justify="center" class="overview-cols">
+                <v-menu :close-on-content-click="false" v-model="dateSelectorOpen" offset-y>
+                <template v-slot:activator="{ on }">
+                    <v-btn v-on="on" color="blue" class="date-button" :outlined=true :large=true>{{ range[0] }} - {{ range[1] }}</v-btn>
+                </template>
+                    <v-date-picker v-model='range' range/>
+                </v-menu>
             </v-col>
-            <v-col cols=1 align="center" justify="center" v-if="sortedPeriods.length > 0">
+        </v-row>
+        <v-row v-if="sortedPeriods.length < 1" dense>
+            <v-col cols=12 align="center" justify="center">
+                No historical data found. Adjust the Date range or Completed some work Periods
+            </v-col>
+        </v-row>
+
+        <v-row align="center" justify="center" style="margin-bottom: 20px;" v-if="sortedPeriods.length > 0" dense>
+            <v-col cols=1 align="center" justify="center" class="overview-cols">
                 <v-row align="center" justify="center" class="metric" dense>
                     {{ totalWorkHours.workedHours }}
                 </v-row>
@@ -12,7 +25,7 @@
                     total hours worked
                 </v-row>
             </v-col>
-            <v-col cols=1 align="center" justify="center" v-if="sortedPeriods.length > 0">
+            <v-col cols=1 align="center" justify="center" class="overview-cols">
                 <v-row align="center" justify="center" class="metric" dense>
                     {{ totalWorkHours.breakHours }}
                 </v-row>
@@ -20,7 +33,7 @@
                     total break hours
                 </v-row>
             </v-col>
-            <v-col cols=1 align="center" justify="center" v-if="sortedPeriods.length > 0">
+            <v-col cols=1 align="center" justify="center" class="overview-cols">
                 <v-row align="center" justify="center" class="metric" dense>
                     {{ totalWorkHours.netWorkHours }}
                 </v-row>
@@ -50,14 +63,6 @@ export default {
         DayCard
     },
     computed: {
-        startDate: function() {
-            const timestamp = moment()
-            return timestamp.subtract('days', 7).format('YYYY-MM-DD')
-        },
-        endDate: function() {
-            const timestamp = moment()
-            return timestamp.add('days', 1).format('YYYY-MM-DD')
-        },
         sortedPeriods: function() {
             var values = []
             Object.keys(this.periods).forEach((date) => {
@@ -98,7 +103,7 @@ export default {
     },
     methods: {
         getPeriods: function() {
-            const url = process.env.VUE_APP_BACKEND_URL + `/data/${this.startDate}/${this.endDate}?group=true`
+            const url = process.env.VUE_APP_BACKEND_URL + `/data/${this.range[0]}/${this.range[1]}?group=true`
             let vm = this
 
             axios({
@@ -127,13 +132,28 @@ export default {
                     })
                 }
             })
+        },
+        onDateRangeChange() {
+            console.log("date range changed")
         }
     },
     data: () => ({
-        periods: {}
+        periods: {},
+        range: [
+            moment().subtract('days', 7).format('YYYY-MM-DD'),
+            moment().add('days', 1).format('YYYY-MM-DD')
+        ],
+        dateSelectorOpen: false
     }),
     mounted() {
         this.getPeriods()
+    },
+    watch: {
+        dateSelectorOpen: function() {
+            if (!this.dateSelectorOpen) {
+                this.getPeriods()
+            }
+        }
     }
 }
 </script>
@@ -155,4 +175,14 @@ export default {
     font-family: 'Allura', 'Avenir', Helvetica, Arial, sans-serif;
     margin-bottom: 0px;
 }
+
+.overview-cols {
+    margin-left: 20px;
+    margin-right: 20px;
+}
+
+.date-button {
+    color: white;
+}
+
 </style>
