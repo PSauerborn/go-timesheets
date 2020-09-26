@@ -34,7 +34,7 @@ func main() {
     ConnectPersistence()
 
     // create new jaeger config and add uid metric
-    config := jaeger.Config("192.168.99.100", "go-timesheets-api", 6831)
+    config := jaeger.Config("jaeger-agent", "go-timesheets-api", 6831)
     config.PreRequestMetrics = append(config.PreRequestMetrics, UserIDMetric{})
 
     tracer := jaeger.NewTracer(config)
