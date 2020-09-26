@@ -189,7 +189,4 @@ export default {
     margin-right: 20px;
 }
 
-.date-button {
-    font-size: 50px;
-}
 </style>
