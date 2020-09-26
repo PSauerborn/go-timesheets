@@ -36,8 +36,8 @@ func analysePeriods(periods []WorkPeriod) AnalysisResults {
         // perform analysis on breaks and add total to results
         if len(period.Breaks) > 0 {
             breakAnalysis := analyseBreaks(period.Breaks)
-            results.TotalWorkHours -= breakAnalysis.TotalHours
             results.TotalBreaks += breakAnalysis.BreakCount
+            results.TotalBreakHours += breakAnalysis.TotalHours
         }
     }
     // evaluate net work hours from total work hours and breaks
