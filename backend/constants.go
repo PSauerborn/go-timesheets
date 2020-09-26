@@ -39,6 +39,10 @@ func(response StandardJSONResponse) InvalidRequest(ctx *gin.Context) {
     ctx.AbortWithStatusJSON(400, gin.H{ "http_code": 400, "success": false, "message": "invalid request" })
 }
 
+func(response StandardJSONResponse) InvalidRequestWithMessage(ctx *gin.Context, msg string) {
+    ctx.AbortWithStatusJSON(400, gin.H{ "http_code": 400, "success": false, "message": msg })
+}
+
 func(response StandardJSONResponse) Unauthorized(ctx *gin.Context) {
     ctx.AbortWithStatusJSON(401, gin.H{ "http_code": 401, "success": false, "message": "unauthorized" })
 }

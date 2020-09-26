@@ -45,8 +45,7 @@ func isValidBreakPeriod(breakId uuid.UUID) (bool, error) {
 
 // function used to parse time strings into datetime values. timestrings
 // need to be in YYYY-MM-DD format in order to be properly parsed
-func parseTimestamps(start, end string) (time.Time, time.Time, error) {
-    layout := "2006-01-02"
+func parseTimestamps(start, end, layout string) (time.Time, time.Time, error) {
     //parse start time
     startTime, err := time.Parse(layout, start)
     if err != nil {

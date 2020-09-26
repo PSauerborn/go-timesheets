@@ -74,14 +74,11 @@ type BreakPeriodAnalysisResults struct {
 }
 
 type BucketAnalysis struct {
-
-}
-
-type BucketStats struct {
-    TotalPeriods int `json:"totalPeriods"`
-    TotalBreaks int `json:"totalBreaks"`
-    TotalWorkHours float64 `json:"totalWorkHours"`
-    TotalBreakHours float64 `json:"totalBreakHours"`
-    AverageWorkPeriod float64 `json:"averageWorkPeriod"`
-    AverageBreakPeriod float64 `json:"averageWorkPeriod"`
+    TotalWorkHours  float64   `json:"totalWorkHours"`
+    TotalBreakHours float64   `json:"totalBreakHours"`
+    NetWorkHours    float64   `json:"netWorkHours"`
+    StartTime       time.Time `json:"startTime"`
+    EndTime         time.Time `json:"endTime"`
+    TotalPeriods    int       `json:"totalPeriods"`
+    TotalBreaks     int       `json:"totalBreaks"`
 }

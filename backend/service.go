@@ -3,6 +3,7 @@ package main
 import (
     "fmt"
     "time"
+    "strconv"
     "strings"
     "github.com/gin-gonic/gin"
     "github.com/google/uuid"
@@ -33,10 +34,8 @@ func main() {
     ConnectPersistence()
 
     // create new jaeger config and add uid metric
-    config := jaeger.Config("jaeger-agent", "go-timesheets-api", 6831)
+    config := jaeger.Config("192.168.99.100", "go-timesheets-api", 6831)
     config.PreRequestMetrics = append(config.PreRequestMetrics, UserIDMetric{})
-
-    log.Debug(config.PreRequestMetrics)
 
     tracer := jaeger.NewTracer(config)
     defer tracer.Close()
@@ -49,6 +48,8 @@ func main() {
     router.GET("/go-timesheets/active", getActivePeriodHandler)
     router.GET("/go-timesheets/data", getUserDataHandler)
     router.GET("/go-timesheets/data/:start/:end", getUserTimeRangeDataHandler)
+    router.GET("/go-timesheets/bucket_analysis/:start/:end", getUserBucketAnalysisHandler)
+
     // create handlers for user data analysis routes
     router.GET("/go-timesheets/analyse", getUserAnalysisHandler)
     router.GET("/go-timesheets/analyse/:start/:end", getUserTimeRangeAnalysisHandler)
@@ -111,10 +112,10 @@ func getUserDataHandler(ctx *gin.Context) {
 func getUserTimeRangeDataHandler(ctx *gin.Context) {
     user := getUser(ctx)
     // get start and end time from url and parse into time.Time objects
-    start, end, err := parseTimestamps(ctx.Param("start"), ctx.Param("end"))
+    start, end, err := parseTimestamps(ctx.Param("start"), ctx.Param("end"), "2006-01-02")
     if err != nil {
         log.Error(fmt.Errorf("unable to parse timestamps: %v", err))
-        StandardHTTP.InvalidRequest(ctx)
+        StandardHTTP.InvalidRequestWithMessage(ctx, "invalid timestamp(s)")
         return
     }
 
@@ -153,10 +154,10 @@ func getUserAnalysisHandler(ctx *gin.Context) {
 func getUserTimeRangeAnalysisHandler(ctx *gin.Context) {
     user := getUser(ctx)
     // get start and end time from url and parse into time.Time objects
-    start, end, err := parseTimestamps(ctx.Param("start"), ctx.Param("end"))
+    start, end, err := parseTimestamps(ctx.Param("start"), ctx.Param("end"), "2006-01-02")
     if err != nil {
         log.Error(fmt.Errorf("unable to parse timestamps: %v", err))
-        StandardHTTP.InvalidRequest(ctx)
+        StandardHTTP.InvalidRequestWithMessage(ctx, "invalid timestamp(s)")
         return
     }
     // analyse users tasks over time range
@@ -164,6 +165,34 @@ func getUserTimeRangeAnalysisHandler(ctx *gin.Context) {
     results, err := analyseRangedUserTasks(user, start, end)
     if err != nil {
         log.Error(fmt.Errorf("unable to analyse user tasks: %v", err))
+        StandardHTTP.InternalServerError(ctx)
+        return
+    }
+    ctx.JSON(200, gin.H{"success": true, "http_code": 200, "payload": results})
+}
+
+func getUserBucketAnalysisHandler(ctx *gin.Context) {
+    user := getUser(ctx)
+    // get start and end time from url and parse into time.Time objects
+    start, end, err := parseTimestamps(ctx.Param("start"), ctx.Param("end"), "2006-01-02T15:04")
+    if err != nil {
+        log.Error(fmt.Errorf("unable to parse timestamps: %v", err))
+        StandardHTTP.InvalidRequestWithMessage(ctx, "invalid timestamp(s)")
+        return
+    }
+    log.Debug(fmt.Sprintf("received bucket analysis request for user %s", user))
+    // retrieve bucket size from query string and parse to integer
+    bucketSizeString := ctx.DefaultQuery("bucket_size", "1440")
+    bucketSize, err := strconv.Atoi(bucketSizeString)
+    if err != nil {
+        log.Error(fmt.Errorf("received invalid bucket size: %v", err))
+        StandardHTTP.InvalidRequestWithMessage(ctx, "invalid bucket interval")
+        return
+    }
+    // execute bucket analysis and return results
+    results, err := executeBucketAnalysis(user, start, end, bucketSize)
+    if err != nil {
+        log.Error(fmt.Errorf("unable to execute bucket analysis: %v", err))
         StandardHTTP.InternalServerError(ctx)
         return
     }
@@ -191,7 +220,7 @@ func createBreakPeriodHandler(ctx *gin.Context) {
     periodId, err := uuid.Parse(ctx.Param("periodId"))
     if err != nil {
         log.Error(fmt.Sprintf("received invalid period ID"))
-        StandardHTTP.InvalidRequest(ctx)
+        StandardHTTP.InvalidRequestWithMessage(ctx, "invalid period id")
         return
     }
 
@@ -211,7 +240,7 @@ func endWorkPeriodHandler(ctx *gin.Context) {
     periodId, err := uuid.Parse(ctx.Param("periodId"))
     if err != nil {
         log.Error(fmt.Sprintf("received invalid period ID"))
-        StandardHTTP.InvalidRequest(ctx)
+        StandardHTTP.InvalidRequestWithMessage(ctx, "invalid period id")
         return
     }
     // check it work period exist in database
@@ -242,7 +271,7 @@ func endBreakPeriodHandler(ctx *gin.Context) {
     breakId, err := uuid.Parse(ctx.Param("breakId"))
     if err != nil {
         log.Error(fmt.Sprintf("received invalid break ID"))
-        StandardHTTP.InvalidRequest(ctx)
+        StandardHTTP.InvalidRequestWithMessage(ctx, "invalid break id")
         return
     }
     // check if break period exist in database

@@ -99,36 +99,76 @@ func groupPeriodsByDay(periods []WorkPeriod, start, end time.Time) map[string][]
 // # Define functions used to bucket and analyse bucketed data
 // ###########################################################
 
+func executeBucketAnalysis(uid string, start, end time.Time, bucketSize int) (map[time.Time]BucketAnalysis, error) {
+    log.Info(fmt.Sprintf("performaning analysis for user %s over range %s - %s", uid, start, end))
+    results, err := persistence.getUserDataOverRange(uid, start, end)
+    if err != nil {
+        log.Error(fmt.Errorf("unable to get user data: %v", err))
+        return map[time.Time]BucketAnalysis{}, err
+    }
+    // bucket periods into time ranges and execute analysis
+    bucketedPeriods := bucketPeriods(results.WorkPeriods, start, end, bucketSize)
+    return analyseBuckets(bucketedPeriods), nil
+}
+
 // function used to analyse bucketed data
-// func analyseBuckets(buckets map[time.Time]WorkPeriod) {
-//     for bucket, periods := range(buckets) {
-//         log.Debug(fmt.Sprintf("processing bucket %+v with %d periods", bucket, len(periods)))
-//     }
-// }
+func analyseBuckets(buckets map[time.Time][]WorkPeriod) map[time.Time]BucketAnalysis {
+    results := map[time.Time]BucketAnalysis{}
+    for bucket, periods := range(buckets) {
+        log.Debug(fmt.Sprintf("processing bucket %+v with %d periods", bucket, len(periods)))
+        if len(periods) < 1 {
+            continue
+        }
+        // analyse periods and breaks within each bucket
+        periodAnalysis := analysePeriods(periods)
+        // create new bucket analysis instance
+        bucketAnalysis := BucketAnalysis{
+            TotalWorkHours: periodAnalysis.TotalWorkHours,
+            TotalBreakHours: periodAnalysis.TotalBreakHours,
+            NetWorkHours: periodAnalysis.NetWorkHours,
+            TotalPeriods: periodAnalysis.TotalPeriods,
+            TotalBreaks: periodAnalysis.TotalBreaks,
+        }
+        // evaluate start and end time and add to buckets
+        bucketAnalysis.StartTime = periods[0].CreatedAt
+        bucketAnalysis.EndTime = *periods[len(periods) - 1].FinishedAt
+        results[bucket] = bucketAnalysis
+    }
+    return results
+}
 
 // function used to determine if period falls within a given bucket
-func fallsInBucket(period WorkPeriod, date time.Time, bucket int) bool {
-    return period.CreatedAt.After(date) && period.CreatedAt.Before(date.Add(time.Minute * time.Duration(bucket)))
+func fallsInBucket(period WorkPeriod, date time.Time, bucket time.Duration) bool {
+    return period.CreatedAt.After(date) && period.CreatedAt.Before(date.Add(bucket))
 }
 
 // function used to bucket periods around a given date
-func bucket(periods []WorkPeriod, date time.Time, bucket int) []WorkPeriod {
-    aggregated := []WorkPeriod{}
+func bucket(periods []WorkPeriod, date time.Time, bucket time.Duration) ([]WorkPeriod, []WorkPeriod) {
+    // create continers for periods that fall inside and outside of time window
+    insidePeriods, outsidePeriods := []WorkPeriod{}, []WorkPeriod{}
     for _, period := range(periods) {
         if fallsInBucket(period, date, bucket) {
-            aggregated = append(aggregated, period)
+            insidePeriods = append(insidePeriods, period)
+        } else {
+            outsidePeriods = append(outsidePeriods, period)
         }
     }
-    return aggregated
+    return insidePeriods, outsidePeriods
 }
 
 // function used to bucket periods by a bucket size (given in minutes)
 func bucketPeriods(periods []WorkPeriod, start, end time.Time, bucketSize int) map[time.Time][]WorkPeriod {
     log.Debug(fmt.Sprintf("bucketing periods over date range %s - %s with bucket %d", start, end, bucketSize))
     bucketed := map[time.Time][]WorkPeriod{}
+    // evaluate bucket duration as time.Duration instance
+    bucketDuration := time.Minute * time.Duration(bucketSize)
     for start.Before(end) {
-        bucketed[start] = bucket(periods, start, bucketSize)
+        // retrive periods inside and outside time window
+        inside, outside := bucket(periods, start, bucketDuration)
+        bucketed[start] = inside
         start = start.Add(time.Minute * time.Duration(bucketSize))
+        // reassign periods to only traverse outside periods
+        periods = outside
     }
     return bucketed
 }
