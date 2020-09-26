@@ -1,7 +1,7 @@
 <template>
     <v-row align="center" justify="center" class="application-tab-container">
         <v-card v-if="inActivePeriod" tile min-width="700">
-            <v-row align="center" justify="center">
+            <v-row align="center" justify="center" dense>
                 <v-col cols=6 align="center" justify="center">
                     <v-card-title>
                         Current Work Period
@@ -12,15 +12,16 @@
                 </v-col>
                 <v-col cols=5 align="center" justify="center">
                     <v-card-text>
-                        <v-btn color="blue" :outlined=true>Start new Break Period</v-btn>
+                        <v-btn v-if="!inBreak" color="blue" :outlined=true @click="startNewBreakPeriod">Start Break Period</v-btn>
+                        <v-btn v-if="inBreak" color="orange" :outlined=true @click="stopCurrentBreakPeriod">Finish Break Period</v-btn>
                     </v-card-text>
                     <v-card-text>
-                        <v-btn color="red" :outlined=true @click="endCurrentWorkPeriod">Stop Active Work Period</v-btn>
+                        <v-btn color="red" :outlined=true @click="endCurrentWorkPeriod" :disabled="inBreak">Stop Active Work Period</v-btn>
                     </v-card-text>
                 </v-col>
             </v-row>
             <v-divider class="mx-4"></v-divider>
-            <v-row align="center" justify="center">
+            <v-row align="center" justify="center" dense>
                 <v-col cols=6 align="center" justify="center">
                     <v-card-text class="active-period-text">
                         Active Since: {{ createdTimestamp }}
@@ -58,11 +59,79 @@ export default {
         inActivePeriod: function() {
             return this.activePeriod != null
         },
+        inBreak: function() {
+            return this.activeBreak != null
+        },
         createdTimestamp: function() {
             return moment(String(this.activePeriod.createdAt)).format('HH:mm:ss DD/MM/YYYY')
         }
     },
     methods: {
+        startNewBreakPeriod: function() {
+            const url = process.env.VUE_APP_BACKEND_URL + '/break_period/' + this.activePeriod.periodId
+            let vm = this
+
+            axios({
+                method: 'post',
+                url: url,
+                headers: {'Authorization': 'Bearer ' + shared.getAccessToken()}
+            }).then(function (response) {
+                vm.$notify({
+                    group: 'main',
+                    title: 'go-timesheets backend',
+                    type: 'success',
+                    text: 'successfully started new break period'
+                })
+                // asign payload to variable
+                vm.activeBreak = response.data.payload
+
+            }).catch(function (error) {
+                console.log("error fetching active work period: API return status code " + error.response.status)
+                if (error.response.status === 401) {
+                    window.location.replace(process.env.VUE_APP_LOGIN_REDIRECT)
+                } else {
+                    vm.$notify({
+                        group: 'main',
+                        title: 'go-timesheets backend',
+                        type: 'error',
+                        text: 'unable to start new break period'
+                    })
+                }
+            })
+        },
+        stopCurrentBreakPeriod: function() {
+            const url = process.env.VUE_APP_BACKEND_URL + '/break_period/' + this.activeBreak.breakId
+            let vm = this
+
+            axios({
+                method: 'patch',
+                url: url,
+                headers: {'Authorization': 'Bearer ' + shared.getAccessToken()}
+            }).then(function (response) {
+                console.log(response)
+                vm.$notify({
+                    group: 'main',
+                    title: 'go-timesheets backend',
+                    type: 'success',
+                    text: 'successfully closed current break period'
+                })
+                // asign payload to variable
+                vm.activeBreak = null
+
+            }).catch(function (error) {
+                console.log("error fetching active work period: API return status code " + error.response.status)
+                if (error.response.status === 401) {
+                    window.location.replace(process.env.VUE_APP_LOGIN_REDIRECT)
+                } else {
+                    vm.$notify({
+                        group: 'main',
+                        title: 'go-timesheets backend',
+                        type: 'error',
+                        text: 'unable to stop current break period'
+                    })
+                }
+            })
+        },
         increaseCounter: function() {
             let vm = this;
             this.timer = setInterval(() => {
@@ -114,6 +183,7 @@ export default {
                 })
                 // asign payload to variable
                 vm.activePeriod = response.data.payload
+                vm.activeBreak = response.data.payload.activeBreak
                 vm.setTimeCounters()
                 if (vm.timer != null) {
                     clearInterval(vm.timer)
@@ -197,6 +267,7 @@ export default {
                     text: 'successfully ended work period'
                 })
                 vm.activePeriod = null
+                vm.$emit('endedWorkPeriod')
             }).catch(function (error) {
                 console.log("error fetching active work period: API return status code " + error.response.status)
                 if (error.response.status === 401) {
@@ -214,6 +285,7 @@ export default {
     },
     data: () => ({
         activePeriod: null,
+        activeBreak: null,
         counters: {seconds: 0, minutes: 0, hours: 0},
         timer: null
     }),

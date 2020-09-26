@@ -16,15 +16,16 @@ type WorkPeriod struct {
     Breaks 	   []BreakPeriod `json:"breaks"`
 }
 
-type ActiveWorkPeriod struct {
-    PeriodId    uuid.UUID `json:"periodId"`
-    CreatedAt   time.Time `json:"createdAt"`
-    ActiveSince float64   `json:"activeSince"`
-}
-
 func(period WorkPeriod) TotalHours() float64 {
     finished := *(period.FinishedAt)
     return finished.Sub(period.CreatedAt).Hours()
+}
+
+type ActiveWorkPeriod struct {
+    PeriodId    uuid.UUID          `json:"periodId"`
+    CreatedAt   time.Time          `json:"createdAt"`
+    ActiveSince float64            `json:"activeSince"`
+    ActiveBreak *ActiveBreakPeriod `json:"activeBreak"`
 }
 
 type BreakPeriod struct {
@@ -36,6 +37,11 @@ type BreakPeriod struct {
 func(period BreakPeriod) TotalHours() float64 {
     finished := *(period.FinishedAt)
     return finished.Sub(period.CreatedAt).Hours()
+}
+
+type ActiveBreakPeriod struct {
+    BreakId   uuid.UUID `json:"breakId"`
+    CreatedAt time.Time `json:"createdAt"`
 }
 
 type UserData struct {
@@ -65,4 +71,26 @@ type WorkPeriodAnalysisResults struct {
 type BreakPeriodAnalysisResults struct {
     BreakCount int     `json:"totalPeriods"`
     TotalHours float64 `json:"totalHours"`
+}
+
+type BucketAnalysis struct {
+    TotalWorkHours  float64   `json:"totalWorkHours"`
+    TotalBreakHours float64   `json:"totalBreakHours"`
+    NetWorkHours    float64   `json:"netWorkHours"`
+    StartTime       time.Time `json:"startTime"`
+    EndTime         time.Time `json:"endTime"`
+    TotalPeriods    int       `json:"totalPeriods"`
+    TotalBreaks     int       `json:"totalBreaks"`
+}
+
+type BucketOverview struct {
+    BucketCount             int       `json:"bucketCount"`
+    TotalWorkHours          float64   `json:"totalWorkHours"`
+    TotalBreakHours         float64   `json:"totalBreakHours"`
+    AverageBucketWorkHours  float64   `json:"averageBucketWorkHours"`
+    AverageBucketBreakHours float64   `json:"averageBucketBreakHours"`
+    AveragePeriodLength     float64   `json:"averagePeriodLength"`
+    AverageBreakLength      float64   `json:"averageBreakLength"`
+    TotalPeriods            int       `json:"totalPeriods"`
+    TotalBreaks             int       `json:"totalBreaks"`
 }
