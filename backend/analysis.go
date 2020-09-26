@@ -6,10 +6,6 @@ import (
     log "github.com/sirupsen/logrus"
 )
 
-var (
-
-)
-
 // function used to analyze list of breaks. both the total number of
 // breaks as well as the total number of break hours are returned
 func analyseBreaks(breaks []BreakPeriod) BreakPeriodAnalysisResults {
@@ -17,6 +13,7 @@ func analyseBreaks(breaks []BreakPeriod) BreakPeriodAnalysisResults {
     // iterate over breaks and increment total break time
     for _, period := range(breaks) {
         if period.FinishedAt != nil {
+            log.Debug(fmt.Sprintf("adding %f hours to total breaks", period.TotalHours()))
             breakHours += period.TotalHours()
         }
     }
@@ -35,8 +32,9 @@ func analysePeriods(periods []WorkPeriod) AnalysisResults {
         if period.FinishedAt != nil {
             results.TotalWorkHours += period.TotalHours()
         }
+        log.Debug(fmt.Sprintf("breaks %+v", period.Breaks))
         // perform analysis on breaks and add total to results
-        if (len(period.Breaks) > 0) {
+        if len(period.Breaks) > 0 {
             breakAnalysis := analyseBreaks(period.Breaks)
             results.TotalWorkHours -= breakAnalysis.TotalHours
             results.TotalBreaks += breakAnalysis.BreakCount
@@ -109,6 +107,39 @@ func executeBucketAnalysis(uid string, start, end time.Time, bucketSize int) (ma
     // bucket periods into time ranges and execute analysis
     bucketedPeriods := bucketPeriods(results.WorkPeriods, start, end, bucketSize)
     return analyseBuckets(bucketedPeriods), nil
+}
+
+// function used for safe division
+func safeDivide(x, y float64) float64 {
+    if y > 0 {
+        return x / y
+    }
+    return 0
+}
+
+// function used to aggregate results from bucket analysis
+func aggregateBuckets(buckets map[time.Time]BucketAnalysis) BucketOverview {
+    totalWorkHours, totalBreakHours := 0.0, 0.0
+    totalPeriods, totalBreaks := 0, 0
+
+    for _, analysisResults := range(buckets) {
+        totalWorkHours += analysisResults.TotalWorkHours
+        totalBreakHours += analysisResults.TotalBreakHours
+        totalPeriods += analysisResults.TotalPeriods
+        totalBreaks += analysisResults.TotalBreaks
+    }
+
+    return BucketOverview{
+        BucketCount: len(buckets),
+        TotalWorkHours: totalWorkHours,
+        TotalBreakHours: totalBreakHours,
+        AverageBucketWorkHours: safeDivide(totalWorkHours, float64(len(buckets))),
+        AverageBucketBreakHours: safeDivide(totalBreakHours, float64(len(buckets))),
+        AveragePeriodLength: safeDivide(totalWorkHours, float64(totalPeriods)),
+        AverageBreakLength: safeDivide(totalBreakHours, float64(totalBreaks)),
+        TotalPeriods: totalPeriods,
+        TotalBreaks: totalBreaks,
+    }
 }
 
 // function used to analyse bucketed data

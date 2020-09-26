@@ -82,3 +82,15 @@ type BucketAnalysis struct {
     TotalPeriods    int       `json:"totalPeriods"`
     TotalBreaks     int       `json:"totalBreaks"`
 }
+
+type BucketOverview struct {
+    BucketCount             int       `json:"bucketCount"`
+    TotalWorkHours          float64   `json:"totalWorkHours"`
+    TotalBreakHours         float64   `json:"totalBreakHours"`
+    AverageBucketWorkHours  float64   `json:"averageBucketWorkHours"`
+    AverageBucketBreakHours float64   `json:"averageBucketBreakHours"`
+    AveragePeriodLength     float64   `json:"averagePeriodLength"`
+    AverageBreakLength      float64   `json:"averageBreakLength"`
+    TotalPeriods            int       `json:"totalPeriods"`
+    TotalBreaks             int       `json:"totalBreaks"`
+}

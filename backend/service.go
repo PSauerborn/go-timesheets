@@ -48,8 +48,8 @@ func main() {
     router.GET("/go-timesheets/active", getActivePeriodHandler)
     router.GET("/go-timesheets/data", getUserDataHandler)
     router.GET("/go-timesheets/data/:start/:end", getUserTimeRangeDataHandler)
+    // create handler to bucket and analyse values
     router.GET("/go-timesheets/bucket_analysis/:start/:end", getUserBucketAnalysisHandler)
-
     // create handlers for user data analysis routes
     router.GET("/go-timesheets/analyse", getUserAnalysisHandler)
     router.GET("/go-timesheets/analyse/:start/:end", getUserTimeRangeAnalysisHandler)
@@ -196,7 +196,12 @@ func getUserBucketAnalysisHandler(ctx *gin.Context) {
         StandardHTTP.InternalServerError(ctx)
         return
     }
-    ctx.JSON(200, gin.H{"success": true, "http_code": 200, "payload": results})
+    // aggregate buckets and get overview
+    payload := gin.H{
+        "buckets": results,
+        "overview": aggregateBuckets(results),
+    }
+    ctx.JSON(200, gin.H{"success": true, "http_code": 200, "payload": payload})
 }
 
 // function used to create a new work period in the database
