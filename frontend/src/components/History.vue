@@ -1,15 +1,8 @@
 <template>
     <v-container align="center" justify="center" class="application-tab-container">
         <v-row align="center" justify="center" style="margin-bottom: 20px;" dense>
-            <v-col cols=2 align="center" justify="center" class="overview-cols">
-                <v-menu :close-on-content-click="false" v-model="dateSelectorOpen" offset-y>
-                <template v-slot:activator="{ on }">
-                    <v-btn min-height="55" v-on="on" class="date-button" :text=true large>
-                        <v-icon left>mdi-clock</v-icon>{{ range[0] }} - {{ range[1] }}
-                    </v-btn>
-                </template>
-                    <v-date-picker v-model='range' range/>
-                </v-menu>
+            <v-col cols=9 align="center" justify="center">
+                <date-selector v-model="dateRange" @dateChanged="getBucketAnalysis" />
             </v-col>
         </v-row>
         <v-row v-if="Object.keys(buckets).length < 1" dense>
@@ -58,11 +51,13 @@ import DayCard from './DayCard';
 import axios from 'axios';
 import shared from '../shared';
 import moment from 'moment';
+import DateSelector from './shared/DateSelector'
 
 export default {
     name: "History",
     components: {
-        DayCard
+        DayCard,
+        DateSelector
     },
     computed: {
         /**
@@ -97,14 +92,14 @@ export default {
          * analysis
          */
         startTimestamp: function() {
-            return moment(this.range[0]).format('YYYY-MM-DDTHH:mm')
+            return moment(this.dateRange.start).format('YYYY-MM-DDTHH:mm')
         },
         /**
          * Computed propert used to evaluate end time of bucket
          * analysis
          */
         endTimestamp: function() {
-            return moment(this.range[1]).format('YYYY-MM-DDTHH:mm')
+            return moment(this.dateRange.end).format('YYYY-MM-DDTHH:mm')
         }
     },
     methods: {
@@ -147,21 +142,14 @@ export default {
     data: () => ({
         periods: {},
         buckets: {},
-        range: [
-            moment().subtract('days', 7).format('YYYY-MM-DD'),
-            moment().add('days', 1).format('YYYY-MM-DD')
-        ],
+        dateRange: {
+            start: moment().subtract('days', 7).format('YYYY-MM-DD'),
+            end: moment().add('days', 1).format('YYYY-MM-DD')
+        },
         dateSelectorOpen: false
     }),
     mounted() {
         this.getBucketAnalysis();
-    },
-    watch: {
-        dateSelectorOpen: function() {
-            if (!this.dateSelectorOpen) {
-                this.getBucketAnalysis()
-            }
-        }
     }
 }
 </script>

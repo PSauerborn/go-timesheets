@@ -158,6 +158,9 @@ export default {
                     horizontal: true,
                     distributed: true
                 }
+            },
+            grid: {
+                show: false
             }
         }
     })
