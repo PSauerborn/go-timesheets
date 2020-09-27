@@ -74,13 +74,13 @@ type BreakPeriodAnalysisResults struct {
 }
 
 type BucketAnalysis struct {
-    TotalWorkHours  float64   `json:"totalWorkHours"`
-    TotalBreakHours float64   `json:"totalBreakHours"`
-    NetWorkHours    float64   `json:"netWorkHours"`
-    StartTime       time.Time `json:"startTime"`
-    EndTime         time.Time `json:"endTime"`
-    TotalPeriods    int       `json:"totalPeriods"`
-    TotalBreaks     int       `json:"totalBreaks"`
+    TotalWorkHours  float64    `json:"totalWorkHours"`
+    TotalBreakHours float64    `json:"totalBreakHours"`
+    NetWorkHours    float64    `json:"netWorkHours"`
+    StartTime       *time.Time `json:"startTime,omitempty"`
+    EndTime         *time.Time `json:"endTime,omitempty"`
+    TotalPeriods    int        `json:"totalPeriods"`
+    TotalBreaks     int        `json:"totalBreaks"`
 }
 
 type BucketOverview struct {

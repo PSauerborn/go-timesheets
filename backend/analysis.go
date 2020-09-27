@@ -97,7 +97,7 @@ func groupPeriodsByDay(periods []WorkPeriod, start, end time.Time) map[string][]
 // # Define functions used to bucket and analyse bucketed data
 // ###########################################################
 
-func executeBucketAnalysis(uid string, start, end time.Time, bucketSize int) (map[time.Time]BucketAnalysis, error) {
+func executeBucketAnalysis(uid string, start, end time.Time, bucketSize int, includeEmpty bool) (map[time.Time]BucketAnalysis, error) {
     log.Info(fmt.Sprintf("performaning analysis for user %s over range %s - %s", uid, start, end))
     results, err := persistence.getUserDataOverRange(uid, start, end)
     if err != nil {
@@ -106,7 +106,7 @@ func executeBucketAnalysis(uid string, start, end time.Time, bucketSize int) (ma
     }
     // bucket periods into time ranges and execute analysis
     bucketedPeriods := bucketPeriods(results.WorkPeriods, start, end, bucketSize)
-    return analyseBuckets(bucketedPeriods), nil
+    return analyseBuckets(bucketedPeriods, includeEmpty), nil
 }
 
 // function used for safe division
@@ -143,11 +143,15 @@ func aggregateBuckets(buckets map[time.Time]BucketAnalysis) BucketOverview {
 }
 
 // function used to analyse bucketed data
-func analyseBuckets(buckets map[time.Time][]WorkPeriod) map[time.Time]BucketAnalysis {
+func analyseBuckets(buckets map[time.Time][]WorkPeriod, includeEmpty bool) map[time.Time]BucketAnalysis {
     results := map[time.Time]BucketAnalysis{}
     for bucket, periods := range(buckets) {
         log.Debug(fmt.Sprintf("processing bucket %+v with %d periods", bucket, len(periods)))
         if len(periods) < 1 {
+            // add empty analysis if not excluding empty values
+            if includeEmpty {
+                results[bucket] = BucketAnalysis{}
+            }
             continue
         }
         // analyse periods and breaks within each bucket
@@ -161,8 +165,8 @@ func analyseBuckets(buckets map[time.Time][]WorkPeriod) map[time.Time]BucketAnal
             TotalBreaks: periodAnalysis.TotalBreaks,
         }
         // evaluate start and end time and add to buckets
-        bucketAnalysis.StartTime = periods[0].CreatedAt
-        bucketAnalysis.EndTime = *periods[len(periods) - 1].FinishedAt
+        bucketAnalysis.StartTime = &periods[0].CreatedAt
+        bucketAnalysis.EndTime = periods[len(periods) - 1].FinishedAt
         results[bucket] = bucketAnalysis
     }
     return results

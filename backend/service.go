@@ -34,7 +34,7 @@ func main() {
     ConnectPersistence()
 
     // create new jaeger config and add uid metric
-    config := jaeger.Config("jaeger-agent", "go-timesheets-api", 6831)
+    config := jaeger.Config("192.168.99.100", "go-timesheets-api", 6831)
     config.PreRequestMetrics = append(config.PreRequestMetrics, UserIDMetric{})
 
     tracer := jaeger.NewTracer(config)
@@ -190,7 +190,8 @@ func getUserBucketAnalysisHandler(ctx *gin.Context) {
         return
     }
     // execute bucket analysis and return results
-    results, err := executeBucketAnalysis(user, start, end, bucketSize)
+    includeEmpty := strings.ToLower(ctx.DefaultQuery("include_empty", "false"))
+    results, err := executeBucketAnalysis(user, start, end, bucketSize, includeEmpty == "true")
     if err != nil {
         log.Error(fmt.Errorf("unable to execute bucket analysis: %v", err))
         StandardHTTP.InternalServerError(ctx)
