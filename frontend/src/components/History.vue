@@ -143,7 +143,7 @@ export default {
         periods: {},
         buckets: {},
         dateRange: {
-            start: moment().subtract('days', 7).format('YYYY-MM-DD'),
+            start: moment().startOf('isoWeek'),
             end: moment().add('days', 1).format('YYYY-MM-DD')
         },
         dateSelectorOpen: false

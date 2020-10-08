@@ -32,7 +32,7 @@ export default {
     },
     data: () => ({
         dateRange: {
-            start: moment().subtract('days', 7).format('YYYY-MM-DD'),
+            start: moment().subtract('days', 30).format('YYYY-MM-DD'),
             end: moment().add('days', 1).format('YYYY-MM-DD')
         },
         dateSelectorOpen: false,
